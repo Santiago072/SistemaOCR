@@ -38,6 +38,11 @@ class FichaController extends Controller
 
     public function procesar(Request $request)
     {
+        // Incrementar límites de tiempo y memoria para procesamiento OCR
+        set_time_limit(600);
+        ini_set('max_execution_time', '600');
+        ini_set('memory_limit', '1024M');
+
         $request->validate([
             'archivo_excel' => 'required|file|mimes:xlsx,xls',
             'archivo_pdf'   => 'required|file|mimes:pdf',
