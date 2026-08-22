@@ -93,6 +93,9 @@ def process_page_in_memory(doc, page_num: int) -> dict:
                 parsed = scan_image_for_barcode(img_cv)
                 if parsed:
                     result.update(parsed)
+                    _, buf = cv2.imencode('.jpg', img_page_bgr, [cv2.IMWRITE_JPEG_QUALITY, 85])
+                    import base64
+                    result["imagen_b64"] = base64.b64encode(buf).decode('utf-8')
                     return result
         except Exception:
             pass
@@ -101,6 +104,9 @@ def process_page_in_memory(doc, page_num: int) -> dict:
     parsed_page = scan_image_for_barcode(img_page_bgr)
     if parsed_page:
         result.update(parsed_page)
+        _, buf = cv2.imencode('.jpg', img_page_bgr, [cv2.IMWRITE_JPEG_QUALITY, 85])
+        import base64
+        result["imagen_b64"] = base64.b64encode(buf).decode('utf-8')
         return result
 
     # 3. Fallback OCR Visual (RapidOCR ONNX)
@@ -108,9 +114,16 @@ def process_page_in_memory(doc, page_num: int) -> dict:
         ocr_res = extract_text_from_id(img_page_bgr)
         if ocr_res and ocr_res.get("numero_documento"):
             result.update(ocr_res)
+            _, buf = cv2.imencode('.jpg', img_page_bgr, [cv2.IMWRITE_JPEG_QUALITY, 85])
+            import base64
+            result["imagen_b64"] = base64.b64encode(buf).decode('utf-8')
             return result
     except Exception as e:
         result["raw_data_json"]["ocr_error"] = str(e)
+
+    _, buf = cv2.imencode('.jpg', img_page_bgr, [cv2.IMWRITE_JPEG_QUALITY, 85])
+    import base64
+    result["imagen_b64"] = base64.b64encode(buf).decode('utf-8')
 
     return result
 

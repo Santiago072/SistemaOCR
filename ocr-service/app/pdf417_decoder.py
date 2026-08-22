@@ -61,7 +61,11 @@ def parse_colombian_pdf417_data(raw_data) -> Optional[Dict[str, Any]]:
                 numero_doc = num_str[-8:].lstrip('0')
             else:
                 numero_doc = num_str.lstrip('0')
-            break
+
+            if len(numero_doc) < 6:
+                numero_doc = None
+            else:
+                break
 
     if not numero_doc:
         first_name_idx = -1

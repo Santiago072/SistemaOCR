@@ -93,9 +93,18 @@ class FichaController extends Controller
             $ocrResponse = $this->ocrService->extractFromPdf($pdfFullPath);
             $paginas = $ocrResponse['paginas'] ?? [];
 
-            // 5. Guardar documentos OCR en BD
+            // 5. Guardar documentos OCR en BD y almacenar recortes de imagen
             DocumentoPdfOcr::where('ficha_id', $ficha->id)->delete();
+            $recortesDir = "recortes/ficha_{$ficha->id}";
+            Storage::disk('public')->makeDirectory($recortesDir);
+
             foreach ($paginas as $p) {
+                $nombreRecorte = "page_{$p['numero_pagina']}.jpg";
+                if (!empty($p['imagen_b64'])) {
+                    $imgData = base64_decode($p['imagen_b64']);
+                    Storage::disk('public')->put("{$recortesDir}/{$nombreRecorte}", $imgData);
+                }
+
                 DocumentoPdfOcr::create([
                     'ficha_id'            => $ficha->id,
                     'numero_pagina'       => $p['numero_pagina'],
@@ -111,7 +120,7 @@ class FichaController extends Controller
                     'rh'                  => $p['rh'] ?? null,
                     'metodo_extraccion'   => $p['metodo_extraccion'] ?? 'PDF417',
                     'confianza_score'     => $p['confianza_score'] ?? 0.0,
-                    'ruta_imagen_recorte' => $p['ruta_imagen_recorte'] ?? null,
+                    'ruta_imagen_recorte' => $nombreRecorte,
                     'raw_data_json'       => $p['raw_data_json'] ?? []
                 ]);
             }

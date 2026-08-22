@@ -42,15 +42,16 @@ class MatchingService
                 $docNumeroAsp = $this->normalizarNumeroDocumento($asp->numero_documento);
                 $docCandidatos = $docsPorNumero[$docNumeroAsp] ?? [];
 
-                // Si no hay documento con ese número exacto, buscar por coincidencia cercana (distancia 1 o número contenido)
+                // Si no hay documento con ese número exacto, buscar por coincidencia cercana solo si los nombres coinciden
                 if (empty($docCandidatos)) {
                     foreach ($documentos as $doc) {
                         if (in_array($doc->id, $documentosUsadosIds)) continue;
                         $docNum = $this->normalizarNumeroDocumento($doc->numero_documento);
-                        if ($docNum === '') continue;
+                        if ($docNum === '' || strlen($docNum) < 7) continue;
 
+                        $simNombres = $this->calcularSimilitudNombres($asp->nombre_completo, $doc->nombre_completo_ocr);
                         $dist = levenshtein($docNumeroAsp, $docNum);
-                        if ($dist <= 1 || (strlen($docNumeroAsp) >= 7 && strlen($docNum) >= 7 && (str_contains($docNumeroAsp, $docNum) || str_contains($docNum, $docNumeroAsp)))) {
+                        if ($dist <= 1 && $simNombres >= 70.0) {
                             $docCandidatos[] = $doc;
                             break;
                         }
