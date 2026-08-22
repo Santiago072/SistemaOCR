@@ -130,6 +130,10 @@ class FichaController extends Controller
             return redirect()->route('cruce.informe', $ficha->id);
 
         } catch (Exception $e) {
+            \Illuminate\Support\Facades\Log::error("Error procesando ficha OCR: " . $e->getMessage(), [
+                'trace' => $e->getTraceAsString()
+            ]);
+
             if ($request->ajax()) {
                 return response()->json(['error' => $e->getMessage()], 500);
             }
