@@ -1,0 +1,83 @@
+version: '3.8'
+
+services:
+  # 1. Base de Datos MariaDB
+  ocr_db:
+    image: mariadb:10.11
+    container_name: ocr_db
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD:-root_sodicol_pass}
+      MYSQL_DATABASE: ${DB_DATABASE:-sistema_ocr}
+      MYSQL_USER: ${DB_USERNAME:-ocr_user}
+      MYSQL_PASSWORD: ${DB_PASSWORD:-ocr_secure_pass}
+    volumes:
+      - ocr_db_data:/var/lib/mysql
+      - ./sql/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+    networks:
+      - sodicol_network
+    healthcheck:
+      test: ["CMD", "mariadb-admin", "ping", "-h", "localhost", "-u", "root", "-p${DB_ROOT_PASSWORD:-root_sodicol_pass}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # 2. Microservicio de OCR Python / FastAPI
+  ocr_python_service:
+    build:
+      context: ./ocr-service
+      dockerfile: Dockerfile
+    container_name: ocr_python_service
+    restart: unless-stopped
+    environment:
+      - PYTHONUNBUFFERED=1
+      - PORT=8000
+    networks:
+      - sodicol_network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+
+  # 3. Aplicación Web Laravel (PHP 8.2 + Caddy)
+  ocr_app:
+    build:
+      context: ./laravel-app
+      dockerfile: Dockerfile
+    container_name: ocr_app
+    restart: unless-stopped
+    ports:
+      - "8899:80"
+    environment:
+      APP_NAME: "Sistema OCR SENA"
+      APP_ENV: production
+      APP_KEY: ${APP_KEY:-base64:XG8o+o9mB1V+9yW+QJ2z9Z8V+9yW+QJ2z9Z8V+9yW+Q=}
+      APP_DEBUG: ${APP_DEBUG:-false}
+      APP_URL: https://sistemaocr.slscode.online
+      DB_CONNECTION: mysql
+      DB_HOST: ocr_db
+      DB_PORT: 3306
+      DB_DATABASE: ${DB_DATABASE:-sistema_ocr}
+      DB_USERNAME: ${DB_USERNAME:-ocr_user}
+      DB_PASSWORD: ${DB_PASSWORD:-ocr_secure_pass}
+      OCR_SERVICE_URL: http://ocr_python_service:8000
+    volumes:
+      - ocr_storage_data:/var/www/html/storage/app/public
+    depends_on:
+      ocr_db:
+        condition: service_healthy
+      ocr_python_service:
+        condition: service_healthy
+    networks:
+      - sodicol_network
+
+volumes:
+  ocr_db_data:
+    name: ocr_db_data
+  ocr_storage_data:
+    name: ocr_storage_data
+
+networks:
+  sodicol_network:
+    external: true

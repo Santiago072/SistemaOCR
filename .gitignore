@@ -1,0 +1,34 @@
+# Dependencias y temporales
+/node_modules
+/vendor
+/laravel-app/vendor
+/laravel-app/node_modules
+/ocr-service/__pycache__
+/ocr-service/.venv
+/python_ocr/__pycache__
+*.pyc
+
+# Archivos de entorno y claves
+.env
+.env.backup
+.env.production
+/laravel-app/.env
+/laravel-app/.env.backup
+
+# Almacenamiento y subidas
+/uploads/*
+!/uploads/.gitkeep
+/laravel-app/storage/*.key
+/laravel-app/storage/app/public/uploads/*
+/laravel-app/storage/framework/cache/*
+/laravel-app/storage/framework/sessions/*
+/laravel-app/storage/framework/views/*
+/laravel-app/storage/logs/*
+
+# IDE y Sistema
+.idea
+.vscode
+*.swp
+*.swo
+.DS_Store
+Thumbs.db
