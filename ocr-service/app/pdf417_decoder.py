@@ -91,7 +91,7 @@ def parse_colombian_pdf417_data(raw_data) -> Optional[Dict[str, Any]]:
                 idx_alfa = i
                 break
 
-    if not numero_doc:
+    if not numero_doc or len(numero_doc) < 7:
         return None
 
     nombres_extraidos: List[str] = []
@@ -129,6 +129,8 @@ def parse_colombian_pdf417_data(raw_data) -> Optional[Dict[str, Any]]:
         ap2 = ""
 
     nombre_completo = " ".join(filter(None, [nom1, nom2, ap1, ap2])).strip()
+    if not nombre_completo:
+        return None
 
     return {
         "exito": True,
