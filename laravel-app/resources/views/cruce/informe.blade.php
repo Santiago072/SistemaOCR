@@ -13,7 +13,12 @@
     <div class="ficha-header-card card">
         <div class="ficha-header-top">
             <div class="ficha-header-info">
-                <span class="badge badge-primary">Ficha N° {{ $ficha->codigo_ficha }}</span>
+                <div style="display: flex; gap: 10px; align-items: center; margin-bottom: 8px;">
+                    <a href="{{ route('home') }}" class="btn-sm btn-outline" style="text-decoration: none; padding: 4px 10px;">
+                        ← Volver al Dashboard
+                    </a>
+                    <span class="badge badge-primary">Ficha N° {{ $ficha->codigo_ficha }}</span>
+                </div>
                 <h2 class="ficha-title">{{ $ficha->programa_formacion }}</h2>
                 <div class="ficha-meta">
                     <span><strong>Excel:</strong> {{ $ficha->archivo_excel_nombre ?? 'N/A' }}</span>
