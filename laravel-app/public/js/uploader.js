@@ -75,4 +75,63 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         }, 1000);
     });
+
+    // Manejador para eliminar ficha desde la tabla principal
+    document.addEventListener('click', async (e) => {
+        const btn = e.target.closest('.btn-eliminar-ficha');
+        if (!btn) return;
+
+        e.preventDefault();
+        const url = btn.getAttribute('data-url');
+        const codigo = btn.getAttribute('data-codigo');
+
+        const result = await Swal.fire({
+            title: '¿Eliminar Ficha ' + codigo + '?',
+            text: 'Se eliminarán los registros de la ficha y su cruce para permitir una carga limpia.',
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#ef4444',
+            confirmButtonText: 'Sí, eliminar',
+            cancelButtonText: 'Cancelar'
+        });
+
+        if (!result.isConfirmed) return;
+
+        btn.disabled = true;
+
+        try {
+            const token = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
+            const response = await fetch(url, {
+                method: 'DELETE',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': token
+                }
+            });
+
+            const data = await response.json();
+            if (data.success) {
+                await Swal.fire({
+                    icon: 'success',
+                    title: 'Ficha Eliminada',
+                    text: data.mensaje
+                });
+                window.location.reload();
+            } else {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: data.error || 'No se pudo eliminar la ficha.'
+                });
+                btn.disabled = false;
+            }
+        } catch (err) {
+            Swal.fire({
+                icon: 'error',
+                title: 'Error de conexión',
+                text: 'No se pudo comunicar con el servidor.'
+            });
+            btn.disabled = false;
+        }
+    });
 });

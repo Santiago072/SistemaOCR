@@ -159,8 +159,8 @@
                                         <span class="badge {{ $badgeClass }}">{{ $f->estado }}</span>
                                     </td>
                                     <td>{{ $f->created_at->format('Y-m-d H:i:s') }}</td>
-                                    <td style="white-space: nowrap; width: 140px;">
-                                        <div class="action-buttons">
+                                    <td style="white-space: nowrap; width: 220px;">
+                                        <div class="action-buttons" style="display: flex; gap: 8px;">
                                             <a href="{{ route('cruce.informe', $f->id) }}" class="btn-sm btn-outline">
                                                 <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                                     <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
@@ -168,6 +168,13 @@
                                                 </svg>
                                                 Ver Informe
                                             </a>
+                                            <button type="button" class="btn-sm btn-danger btn-eliminar-ficha" data-url="{{ route('fichas.eliminar', $f->id) }}" data-codigo="{{ $f->codigo_ficha }}" title="Eliminar Ficha">
+                                                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                                    <polyline points="3 6 5 6 21 6"></polyline>
+                                                    <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                                                </svg>
+                                                Eliminar
+                                            </button>
                                         </div>
                                     </td>
                                 </tr>
