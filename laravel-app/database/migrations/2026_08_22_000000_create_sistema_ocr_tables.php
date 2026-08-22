@@ -49,7 +49,7 @@ return new class extends Migration
             $table->string('genero', 10)->nullable();
             $table->string('fecha_nacimiento', 30)->nullable();
             $table->string('rh', 5)->nullable();
-            $table->enum('metodo_extraccion', ['PDF417', 'OCR_TESSERACT', 'OCR_PADDLE', 'MANUAL', 'FALLIDO'])->default('PDF417');
+            $table->string('metodo_extraccion', 50)->default('PDF417');
             $table->decimal('confianza_score', 5, 2)->default(100.00);
             $table->string('ruta_imagen_recorte', 255)->nullable();
             $table->text('raw_data_json')->nullable();
