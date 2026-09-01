@@ -14,8 +14,27 @@ class ExcelReaderService
 
     public function __construct()
     {
-        $this->pythonExec = getenv('PYTHON_EXECUTABLE') ?: 'python';
-        $this->parserScript = realpath(__DIR__ . '/../../python_ocr/excel_parser.py') ?: '';
+        $posiblesRutas = [
+            'C:\\Users\\Usuario\\AppData\\Local\\Programs\\Python\\Python313\\python.exe',
+            realpath(__DIR__ . '/../../python/python.exe'),
+            realpath(__DIR__ . '/../../python_ocr/python/python.exe'),
+            realpath(__DIR__ . '/../../../Lector de cedulas/python/python.exe'),
+        ];
+
+        $ejecutableEncontrado = null;
+        foreach ($posiblesRutas as $ruta) {
+            if ($ruta && file_exists($ruta)) {
+                $ejecutableEncontrado = $ruta;
+                break;
+            }
+        }
+
+        $this->pythonExec = $ejecutableEncontrado ?: (getenv('PYTHON_EXECUTABLE') ?: 'python');
+        $path = realpath(__DIR__ . '/../../python_ocr/excel_parser.py');
+        if (!$path) {
+            $path = __DIR__ . '/../../python_ocr/excel_parser.py';
+        }
+        $this->parserScript = $path;
     }
 
     /**

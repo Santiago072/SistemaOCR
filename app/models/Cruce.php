@@ -31,7 +31,13 @@ class Cruce extends Model
                 dpo.numero_pagina as pdf_pagina,
                 dpo.tipo_documento as ocr_tipo_doc,
                 dpo.numero_documento as ocr_num_doc,
+                dpo.primer_nombre as ocr_primer_nombre,
+                dpo.segundo_nombre as ocr_segundo_nombre,
+                dpo.primer_apellido as ocr_primer_apellido,
+                dpo.segundo_apellido as ocr_segundo_apellido,
                 dpo.nombre_completo_ocr as ocr_nombre,
+                dpo.fecha_nacimiento as ocr_nacimiento,
+                dpo.rh as ocr_rh,
                 dpo.metodo_extraccion,
                 dpo.confianza_score,
                 dpo.ruta_imagen_recorte

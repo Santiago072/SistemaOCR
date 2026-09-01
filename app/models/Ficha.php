@@ -77,12 +77,54 @@ class Ficha extends Model
 
     public function deleteById(int $id): bool
     {
-        // Borrar registros vinculados
-        $this->db->prepare("DELETE FROM cruce_conciliacion WHERE ficha_id = :id")->execute(['id' => $id]);
-        $this->db->prepare("DELETE FROM documentos_pdf_ocr WHERE ficha_id = :id")->execute(['id' => $id]);
-        $this->db->prepare("DELETE FROM aspirantes_excel WHERE ficha_id = :id")->execute(['id' => $id]);
-        $this->db->prepare("DELETE FROM participantes_finales WHERE ficha_id = :id")->execute(['id' => $id]);
-        $stmt = $this->db->prepare("DELETE FROM fichas WHERE id = :id");
-        return $stmt->execute(['id' => $id]);
+        try {
+            $this->db->beginTransaction();
+
+            // 1. Borrar eventos de progreso asociados a los jobs de esta ficha
+            try {
+                $this->db->prepare("
+                    DELETE e FROM ocr_progress_events e
+                    INNER JOIN ocr_jobs j ON e.job_id = j.id
+                    WHERE j.ficha_id = :id
+                ")->execute(['id' => $id]);
+            } catch (\Throwable $t) {}
+
+            // 2. Borrar jobs OCR de esta ficha
+            try {
+                $this->db->prepare("DELETE FROM ocr_jobs WHERE ficha_id = :id")->execute(['id' => $id]);
+            } catch (\Throwable $t) {}
+
+            // 3. Borrar cruces y conciliaciones
+            try {
+                $this->db->prepare("DELETE FROM cruce_conciliacion WHERE ficha_id = :id")->execute(['id' => $id]);
+            } catch (\Throwable $t) {}
+
+            // 4. Borrar documentos extraídos del PDF
+            try {
+                $this->db->prepare("DELETE FROM documentos_pdf_ocr WHERE ficha_id = :id")->execute(['id' => $id]);
+            } catch (\Throwable $t) {}
+
+            // 5. Borrar aspirantes del Excel
+            try {
+                $this->db->prepare("DELETE FROM aspirantes_excel WHERE ficha_id = :id")->execute(['id' => $id]);
+            } catch (\Throwable $t) {}
+
+            // 6. Borrar participantes finales importados
+            try {
+                $this->db->prepare("DELETE FROM participantes_finales WHERE ficha_id = :id")->execute(['id' => $id]);
+            } catch (\Throwable $t) {}
+
+            // 7. Borrar la ficha
+            $stmt = $this->db->prepare("DELETE FROM fichas WHERE id = :id");
+            $res = $stmt->execute(['id' => $id]);
+
+            $this->db->commit();
+            return $res;
+        } catch (\Throwable $e) {
+            if ($this->db->inTransaction()) {
+                $this->db->rollBack();
+            }
+            throw $e;
+        }
     }
 }

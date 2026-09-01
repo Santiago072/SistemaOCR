@@ -95,10 +95,10 @@ $csrfToken = Security::generateCsrfToken();
     </div>
 
     <!-- Scripts Globales Modulares (Sin código inline) -->
-    <script src="<?= $base ?>public/js/app.js"></script>
+    <script src="<?= $base ?>public/js/app.js?v=<?= time() ?>"></script>
     <?php if (isset($extraJs)): ?>
         <?php foreach ($extraJs as $js): ?>
-            <script src="<?= $base ?>public/js/<?= htmlspecialchars($js, ENT_QUOTES, 'UTF-8') ?>"></script>
+            <script src="<?= $base ?>public/js/<?= htmlspecialchars($js, ENT_QUOTES, 'UTF-8') ?>?v=<?= time() ?>"></script>
         <?php endforeach; ?>
     <?php endif; ?>
 </body>

@@ -69,7 +69,28 @@ class Container
         foreach ($parameters as $parameter) {
             $type = $parameter->getType();
             if ($type && !$type->isBuiltin()) {
-                $dependencies[] = $this->make($type->getName());
+                $typeName = $type->getName();
+                if ($typeName === 'PDO' || is_subclass_of($typeName, 'PDO')) {
+                    $dependencies[] = Database::getConnection();
+                } elseif ($this->has($typeName) || class_exists($typeName) || interface_exists($typeName)) {
+                    try {
+                        $dependencies[] = $this->make($typeName);
+                    } catch (\Throwable $te) {
+                        if ($parameter->isDefaultValueAvailable()) {
+                            $dependencies[] = $parameter->getDefaultValue();
+                        } elseif ($type->allowsNull()) {
+                            $dependencies[] = null;
+                        } else {
+                            throw $te;
+                        }
+                    }
+                } elseif ($parameter->isDefaultValueAvailable()) {
+                    $dependencies[] = $parameter->getDefaultValue();
+                } elseif ($type->allowsNull()) {
+                    $dependencies[] = null;
+                } else {
+                    throw new \RuntimeException("No se puede resolver el tipo {$typeName} para el parámetro {$parameter->getName()} en {$className}");
+                }
             } elseif ($parameter->isDefaultValueAvailable()) {
                 $dependencies[] = $parameter->getDefaultValue();
             } else {
@@ -78,5 +99,10 @@ class Container
         }
 
         return $reflector->newInstanceArgs($dependencies);
+    }
+
+    public function has(string $abstract): bool
+    {
+        return isset($this->bindings[$abstract]) || isset($this->instances[$abstract]);
     }
 }

@@ -56,10 +56,15 @@ $rutas = [
     'cruce/informe'        => [\App\Controllers\CruceController::class, 'informe'],
     'cruce/validar_manual' => [\App\Controllers\CruceController::class, 'validarManual'],
     'cruce/importar'       => [\App\Controllers\CruceController::class, 'importarFinal'],
+    'cruce/sincronizar'    => [\App\Controllers\CruceController::class, 'sincronizar'],
+    'cruce/exportarExcel'  => [\App\Controllers\CruceController::class, 'exportarExcel'],
     'ficha/eliminar'       => [\App\Controllers\FichaController::class, 'eliminar'],
     
     // API / Async endpoints
-    'api/estado_proceso'   => [\App\Controllers\ApiController::class, 'estadoProceso']
+    'api/estado_proceso'   => [\App\Controllers\ApiController::class, 'estadoProceso'],
+    'api/estadoTrabajo'    => [\App\Controllers\ApiController::class, 'estadoTrabajo'],
+    'api/parcialTrabajo'   => [\App\Controllers\ApiController::class, 'parcialTrabajo'],
+    'api/datosTrabajo'     => [\App\Controllers\ApiController::class, 'datosTrabajo']
 ];
 
 // Obtener ruta de la URL (GET ?ruta=...)

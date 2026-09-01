@@ -137,35 +137,20 @@ class FichaController extends Controller
             // 3. Guardar aspirantes del Excel en BD
             $this->aspiranteModel->insertBatch($fichaId, $aspirantes);
 
-            // 4. Procesar PDF con OCR / PDF417 en Python (reemplazo limpio de carpeta de recortes)
-            $outputRecortesDir = $uploadDir . '/recortes/ficha_' . $fichaId;
-            if (is_dir($outputRecortesDir)) {
-                foreach (glob($outputRecortesDir . '/*') as $f) {
-                    if (is_file($f)) { @unlink($f); }
-                }
-            }
-            $ocrResult = $this->ocrService->processPdf($savedPdfPath, $outputRecortesDir);
+            // 4. Iniciar trabajo en el microservicio asíncrono en segundo plano (retorna en < 500ms)
+            $trabajo = $this->ocrService->iniciarTrabajo($savedPdfPath, $savedExcelPath);
+            $trabajoId = $trabajo['trabajo'] ?? '';
 
-            // 5. Guardar documentos OCR en BD
-            $paginasOcr = $ocrResult['paginas'] ?? [];
-            $this->documentoModel->insertBatch($fichaId, $paginasOcr);
-
-            // 6. Ejecutar Motor de Cruce
-            $this->matchingService->ejecutarCruce($fichaId);
-
-            // 7. Guardar duración total del procesamiento
-            $elapsedSeconds = round(microtime(true) - $startTime, 2);
-            $this->fichaModel->updateTiempoProcesamiento($fichaId, $elapsedSeconds);
-
-            // Responder con éxito y redirección
+            // Responder con éxito y redirección inmediata a la vista de revisión en vivo
             if (!empty($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) === 'xmlhttprequest') {
                 $this->json([
                     'success' => true,
                     'ficha_id' => $fichaId,
-                    'redirect_url' => defined('BASE_PATH') ? BASE_PATH . "index.php?ruta=cruce/informe&ficha={$fichaId}" : "index.php?ruta=cruce/informe&ficha={$fichaId}"
+                    'trabajo_id' => $trabajoId,
+                    'redirect_url' => defined('BASE_PATH') ? BASE_PATH . "index.php?ruta=cruce/informe&ficha={$fichaId}&trabajo={$trabajoId}" : "index.php?ruta=cruce/informe&ficha={$fichaId}&trabajo={$trabajoId}"
                 ]);
             } else {
-                $this->redirect("cruce/informe&ficha={$fichaId}");
+                $this->redirect("cruce/informe&ficha={$fichaId}&trabajo={$trabajoId}");
             }
 
         } catch (\Throwable $e) {
@@ -194,20 +179,20 @@ class FichaController extends Controller
         $uploadDir = realpath(__DIR__ . '/../../uploads') ?: (__DIR__ . '/../../uploads');
         $recortesDir = $uploadDir . '/recortes/ficha_' . $fichaId;
 
-        // Obtener datos de la ficha para borrar sus archivos PDF y Excel
+        // Obtener datos de la ficha para borrar sus archivos PDF y Excel en uploads/
         $ficha = $this->fichaModel->findById($fichaId);
         if ($ficha) {
             if (!empty($ficha['archivo_excel_nombre'])) {
-                $archivos = glob($uploadDir . '/*_' . $ficha['archivo_excel_nombre']);
-                foreach ($archivos as $a) { @unlink($a); }
+                $archivosExcel = glob($uploadDir . '/*' . $ficha['archivo_excel_nombre']);
+                foreach ($archivosExcel as $a) { if (is_file($a)) { @unlink($a); } }
             }
             if (!empty($ficha['archivo_pdf_nombre'])) {
-                $archivos = glob($uploadDir . '/*_' . $ficha['archivo_pdf_nombre']);
-                foreach ($archivos as $a) { @unlink($a); }
+                $archivosPdf = glob($uploadDir . '/*' . $ficha['archivo_pdf_nombre']);
+                foreach ($archivosPdf as $a) { if (is_file($a)) { @unlink($a); } }
             }
         }
 
-        // Borrar imágenes de recortes de la carpeta si existen
+        // Borrar imágenes de recortes de la ficha en uploads/recortes/ficha_X
         if (is_dir($recortesDir)) {
             $files = glob($recortesDir . '/*');
             foreach ($files as $file) {
@@ -216,6 +201,26 @@ class FichaController extends Controller
                 }
             }
             @rmdir($recortesDir);
+        }
+
+        // Limpiar de forma exhaustiva carpetas temporales huérfanas en uploads/tmp/
+        $tmpDir = $uploadDir . '/tmp';
+        if (is_dir($tmpDir)) {
+            $trabajos = glob($tmpDir . '/*');
+            foreach ($trabajos as $t) {
+                if (is_dir($t)) {
+                    $subFiles = glob($t . '/*');
+                    foreach ($subFiles as $sf) {
+                        if (is_dir($sf)) {
+                            foreach (glob($sf . '/*') as $ssf) { @unlink($ssf); }
+                            @rmdir($sf);
+                        } else {
+                            @unlink($sf);
+                        }
+                    }
+                    @rmdir($t);
+                }
+            }
         }
 
         // Borrar de la BD
