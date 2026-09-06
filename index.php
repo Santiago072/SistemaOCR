@@ -46,6 +46,7 @@ $container = new Container();
 // Mapa estricto de rutas protegidas
 $rutas = [
     // Dashboard y Fichas
+    'landing'              => [\App\Controllers\HomeController::class, 'landing'],
     'home/index'           => [\App\Controllers\HomeController::class, 'index'],
     'ficha/index'          => [\App\Controllers\HomeController::class, 'index'],
     'ficha/subir'          => [\App\Controllers\FichaController::class, 'subir'],
@@ -68,7 +69,8 @@ $rutas = [
 ];
 
 // Obtener ruta de la URL (GET ?ruta=...)
-$ruta = $_GET['ruta'] ?? 'home/index';
+$ruta = $_GET['ruta'] ?? 'landing';
+if ($ruta === '') { $ruta = 'landing'; }
 $ruta = trim(filter_var($ruta, FILTER_SANITIZE_URL), '/');
 
 if (!array_key_exists($ruta, $rutas)) {

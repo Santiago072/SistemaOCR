@@ -12,6 +12,10 @@ $csrfToken = Security::generateCsrfToken();
     <meta name="base-path" content="<?= htmlspecialchars($base, ENT_QUOTES, 'UTF-8') ?>">
     <title><?= htmlspecialchars($titulo ?? 'Sistema OCR & Conciliación', ENT_QUOTES, 'UTF-8') ?></title>
     
+    <!-- Favicon -->
+    <link rel="icon" type="image/svg+xml" href="<?= $base ?>public/img/favicon.svg">
+    <link rel="alternate icon" href="<?= $base ?>public/img/favicon.svg">
+
     <!-- Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>

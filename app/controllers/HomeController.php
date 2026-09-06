@@ -30,4 +30,19 @@ class HomeController extends Controller
             'extraJs' => ['dropzone-uploader.js']
         ]);
     }
+    public function landing(): void
+    {
+        $fichas = $this->fichaModel->getAll();
+        $totalInscritos = 0;
+        foreach ($fichas as $f) {
+            $totalInscritos += (int)($f['total_inscritos'] ?? 0);
+        }
+
+        $this->view('landing/index', [
+            'fichas' => $fichas,
+            'totalInscritos' => $totalInscritos,
+            'titulo' => 'Sistema OCR — Auditoría y Conciliación Documental Inteligente'
+        ], ''); // Layout vacío porque la landing es autosuficiente con su propia estructura premium
+    }
+
 }
